@@ -4,7 +4,6 @@ from .backend import keras, TF_KERAS
 from .backend import backend as K
 from keras import activations, constraints, initializers, regularizers
 from keras.layers import *
-from tcn import TCN 
 
 
 class ScaledDotProductAttention(Layer):
@@ -307,11 +306,8 @@ class TemporalConvAttention(Layer):
     def __init__(self,
                  filter_num=64,  # The number of filters to use in the convolutional layers. 
                  filter_size=3,  # The size of the kernel to use in each convolutional layer.
-                 return_sequences=False,  # Whether to return the last output in the output sequence, or the full sequence.
-                 dilations=None,  # A dilation list. Example is: [1, 2, 4, 8, 16, 32, 64].
-                 nb_stacks=1,  # The number of stacks of residual blocks to use.
-                 padding='causal',  # The padding to use in the convolutions. 'causal' for a causal network 
-                 use_skip_connections=True,  # If we want to add skip connections from input to each residual block.
+                 timesteps=6,  # The timesteps of traffic flow.
+                 padding='valid',  # The padding to use in the convolutions. 'causal' for a causal network 
                  dropout_rate=0.5,  # Float between 0 and 1. Fraction of the input units to drop.
                  activation='linear',  # The activation used in the residual blocks o = activation(x + F(x)).
                  use_batch_norm=False,  # Whether to use batch normalization in the residual layers or not.
@@ -320,11 +316,8 @@ class TemporalConvAttention(Layer):
                  ):
         self.filter_num = filter_num
         self.filter_size = filter_size
-        self.return_sequences = return_sequences
-        self.dilations = dilations
-        self.nb_stacks = nb_stacks
+        self.timesteps = timesteps
         self.padding = padding
-        self.use_skip_connections = use_skip_connections
         self.dropout_rate = dropout_rate
         self.activation = activation
         self.use_batch_norm = use_batch_norm
@@ -332,11 +325,7 @@ class TemporalConvAttention(Layer):
         '''
             filter_num=64,   The number of filters to use in the convolutional layers. 
             filter_size=3,   The size of the kernel to use in each convolutional layer.
-            return_sequences=False,   Whether to return the last output in the output sequence, or the full sequence.
-            dilations=None,   A dilation list. Example is: [1, 2, 4, 8, 16, 32, 64].
-            nb_stacks=1,   The number of stacks of residual blocks to use.
-            padding='causal',   The padding to use in the convolutions. 'causal' for a causal network 
-            use_skip_connections=True,   If we want to add skip connections from input to each residual block.
+            padding='valid',   The padding to use in the convolutions. 'causal' for a causal network 
             dropout_rate=0.5,   Float between 0 and 1. Fraction of the input units to drop.
             activation='linear',   The activation used in the residual blocks o = activation(x + F(x)).
             use_batch_norm=False,   Whether to use batch normalization in the residual layers or not.
@@ -348,25 +337,21 @@ class TemporalConvAttention(Layer):
         '''
             input_shape [batch, timesteps, feature_dim]
         '''
-        feature_dim = int(input_shape[2])
-        self.W_in = self.add_weight(shape=(feature_dim, self.filter_num),)
-        self.W_out = self.add_weight(shape=(self.filter_num, feature_dim),)
         super(TemporalConvAttention, self).build(input_shape)
         
     def call(self, inputs, mask=None, **kwargs):
         '''
         时间维度注意力：在时间序列的不同维度（分量）上计算注意力，而不是使用来自NLP的基于序列时间步的注意力
 
-        inputs: [batch_size, attn_size * 2] (c and h)
+        inputs: [batch_size, timesteps, feature_dim] 
         attn_states: [batch_size, attn_length, attn_size] (h)
         new_attns: [batch_size, attn_size]
         new_attn_states: [batch_size, attn_length - 1, attn_size]
 
         
         '''
-
         # w: [batch_size, 1, filter_num] 
-        w = K.reshape(Dense(self.inputs, filter_num, use_bias=False), [-1, 1, filter_num])
+        w = K.reshape(Dense(inputs, filter_num, use_bias=False), [-1, 1, filter_num])
         reshape_attn_vecs = K.reshape(attn_states, [-1, attn_length, attn_size, 1])
         conv_vecs = TCN(
             inputs=reshape_attn_vecs,
@@ -796,35 +781,3 @@ class GraphAttention(Layer):
         return output_shape
 
 
-
-class AttentionBlock(Layer):
-    '''
-    时序和图注意力的模块
-    '''
-    def __init__(self,):
-        pass
-
-
-class Graph_Module(Layer):
-    '''
-    图计算模组，对图结构中的节点特征进行推断
-    '''
-    def __init__(self,):
-        pass
-
-
-class Tempotal_Module(Layer):
-    '''
-    时序计算模组：对图内节点的未来特征进行推断
-    '''
-    def __init__(self,):
-        pass
-
-
-class TGA(Layer):
-    '''
-    Temporal and Graph Attention 模型，由图计算模组和时序计算模组拼接而成，
-    对图计算模组的结果进行组合之后再由时序计算模组进行推测，实现对图内未知节点的预测。
-    '''
-    def __init__(self,):
-        pass
