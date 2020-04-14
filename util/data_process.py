@@ -17,7 +17,7 @@ import re
 import multiprocessing as mp
 from functools import partial
 import copy
-from util.tools import *
+from .tools import *
 
 
 class DataProcessor(object):
@@ -153,9 +153,10 @@ class DataProcessor(object):
             q_of_y = math.ceil(ts.month/3)
             datetime_vec = [ts.year, q_of_y, ts.month,
                             d_of_w, ts.day, ts.hour, ts.minute, ts.second]
-            x = np.divide(np.array(datetime_vec), np.array(T))
-            sin_ = [math.sin(2*PI*i) for i in x]
-            cos_ = [math.cos(2*PI*i) for i in x]
+            x = np.array(datetime_vec) % np.array(T)
+            x_t = x/T
+            sin_ = [math.sin(2*PI*i) for i in x_t]
+            cos_ = [math.cos(2*PI*i) for i in x_t]
             embedding = sin_ + cos_
             embedding_list.append(embedding)
         # 转换为字符串

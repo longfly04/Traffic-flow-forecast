@@ -38,9 +38,10 @@ def main():
     model = LSTM_Model(config)
     model.build_model()
     # 可以将之前的训练权重载入再继续训练
-    model_file = os.path.join(config['after_training']['well_trained_dir'],
+    if config['after_training']['continue']:
+        model_file = os.path.join(config['after_training']['well_trained_dir'],
                               config['after_training']['well_trained_model'])
-    model.load_model(model_file)
+        model.load_model(model_file)
 
     # 在mask状态下启用训练，每隔epoch_per_mask个epoch就随机生成mask，
     # mask作为验证集，保证模型可以对整个数据集充分学习

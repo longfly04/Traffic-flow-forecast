@@ -1,4 +1,4 @@
-*.csv
+
 *.xlsx
 *.pyc
 *.json
@@ -16,7 +16,7 @@ doc/DOC.md
 /saved_models
 /saved_results
 /doc
-/data
+
 /output
 /well_trained
 model/layers.py
