@@ -1,4 +1,4 @@
-tensorflow_gpu==1.14.0
+tensorflow_gpu==2.12.0
 Keras==2.3.1
 networkx==2.4
 arrow==0.14.2
